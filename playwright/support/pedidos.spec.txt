@@ -1,0 +1,216 @@
+import { test, expect } from '@playwright/test';
+import { generateOrderCode } from '../support/helpers';
+
+const order = generateOrderCode();
+
+///AAA - Arrange, Act, Assert
+
+test.describe('Consultar Pedido', () => {
+
+ /*  test.beforeAll(async () => {
+    console.log(
+      'beforeAll: roda uma vez antes de todos os testes.'
+    )
+  }) */
+  
+  test.beforeEach(async ({ page }) => {
+     // Arrange
+     await page.goto('http://localhost:5173/');
+     await expect(page.getByTestId('hero-section').getByRole('heading')).toContainText('Velô Sprint');
+   
+     await page.getByRole('link', { name: 'Consultar Pedido' }).click();
+     await expect(page.getByRole('heading')).toContainText('Consultar Pedido');
+  })
+  
+ /*  test.afterEach(async () => {
+    console.log(
+      'afterEach: roda depois de cada teste.'
+    )
+  })
+  
+  test.afterAll(async () => {
+    console.log(
+      'afterAll: roda uma vez depois de todos os testes.'
+    )
+  }) */
+
+  test('deve consultar um pedido', async ({ page }) => {
+
+    // Test Data
+    const order = "VLO-HUMHRM"
+  
+    // Act
+    await page.getByRole('textbox', { name: 'Número do Pedido'}).fill(order);
+    await page.getByRole('button', { name: 'Buscar Pedido' }).click();
+  
+    // Assert
+    // await expect(page.getByRole('textbox', { name: 'Pedido' })).toBeVisible({ timeout: 30000 });
+    
+   /*  const contaierPedido = page.getByRole('paragraph')
+    .filter({hasText: /^Pedido$/}).locator('..')
+  
+    await expect(contaierPedido).toContainText(order, { timeout: 10000 });
+  
+    await expect(page.getByText('APROVADO')).toBeVisible(); */
+
+    await expect(page.getByTestId(`order-result-${order}`)).toMatchAriaSnapshot(`
+      - img
+      - paragraph: Pedido
+      - paragraph: ${order}
+      - status:
+        - img
+        - text: APROVADO
+      - img "Velô Sprint"
+      - paragraph: Modelo
+      - paragraph: Velô Sprint
+      - paragraph: Cor
+      - paragraph: Glacier Blue
+      - paragraph: Interior
+      - paragraph: cream
+      - paragraph: Rodas
+      - paragraph: aero Wheels
+      - heading "Dados do Cliente" [level=4]
+      - paragraph: Nome
+      - paragraph: Wesley QA Wesley Santos
+      - paragraph: Email
+      - paragraph: wesley.santos.cnm@gmail.com
+      - paragraph: Loja de Retirada
+      - paragraph
+      - paragraph: Data do Pedido
+      - paragraph: 02/03/2026
+      - heading "Pagamento" [level=4]
+      - paragraph: À Vista
+      - paragraph: R$ 40.000,00
+      `);
+      
+    const statusBadge = page.getByRole('status').filter({hasText:"APROVADO"})
+
+    await expect (statusBadge).toHaveClass(/bg-green-100/)
+    await expect (statusBadge).toHaveClass(/text-green-700/)
+
+    const statusIcon = statusBadge.locator('svg')
+    await expect(statusIcon).toHaveClass(/lucide-circle-check-big/)
+  })
+  
+  
+  test('deve consultar um pedido REPROVADO', async ({ page }) => {
+
+    // Test Data
+    const orderRep = "VLO-Z9BBZ6"
+  
+    // Act
+    await page.getByRole('textbox', { name: 'Número do Pedido'}).fill(orderRep);
+    await page.getByRole('button', { name: 'Buscar Pedido' }).click();
+  
+    // Assert
+
+    await expect(page.getByTestId(`order-result-${orderRep}`)).toMatchAriaSnapshot(`
+    - img
+    - paragraph: Pedido
+    - paragraph: ${orderRep}
+    - status:
+      - img
+      - text: REPROVADO
+    - img "Velô Sprint"
+    - paragraph: Modelo
+    - paragraph: Velô Sprint
+    - paragraph: Cor
+    - paragraph: Lunar White
+    - paragraph: Interior
+    - paragraph: cream
+    - paragraph: Rodas
+    - paragraph: aero Wheels
+    - heading "Dados do Cliente" [level=4]
+    - paragraph: Nome
+    - paragraph: Wesley QA
+    - paragraph: Email
+    - paragraph: wesley.leal@chavesnamao.com.br
+    - paragraph: Loja de Retirada
+    - paragraph
+    - paragraph: Data do Pedido
+    - paragraph: 27/02/2026
+    - heading "Pagamento" [level=4]
+    - paragraph: À Vista
+    - paragraph: R$ 40.000,00
+      `);
+
+    const statusBadge = page.getByRole('status').filter({hasText:"REPROVADO"})
+
+    await expect (statusBadge).toHaveClass(/bg-red-100/)
+    await expect (statusBadge).toHaveClass(/text-red-700/)
+
+    const statusIcon = statusBadge.locator('svg')
+    await expect(statusIcon).toHaveClass(/lucide-circle-x/)
+  })
+
+  test('deve consultar um pedido EM_ANALISE', async ({ page }) => {
+
+    // Test Data
+    const orderAn = "VLO-JM607A"
+  
+    // Act
+    await page.getByRole('textbox', { name: 'Número do Pedido'}).fill(orderAn);
+    await page.getByRole('button', { name: 'Buscar Pedido' }).click();
+  
+    // Assert
+
+    await expect(page.getByTestId(`order-result-${orderAn}`)).toMatchAriaSnapshot(`
+    - img
+    - paragraph: Pedido
+    - paragraph: ${orderAn}
+    - status:
+      - img
+      - text: EM_ANALISE
+    - img "Velô Sprint"
+    - paragraph: Modelo
+    - paragraph: Velô Sprint
+    - paragraph: Cor
+    - paragraph: Glacier Blue
+    - paragraph: Interior
+    - paragraph: cream
+    - paragraph: Rodas
+    - paragraph: aero Wheels
+    - heading "Dados do Cliente" [level=4]
+    - paragraph: Nome
+    - paragraph: Wesley QA
+    - paragraph: Email
+    - paragraph: teste@teste.com
+    - paragraph: Loja de Retirada
+    - paragraph
+    - paragraph: Data do Pedido
+    - paragraph: /\\d+\\/\\d+\\/\\d+/
+    - heading "Pagamento" [level=4]
+    - paragraph: À Vista
+    - paragraph: /R\\$ \\d+\\.\\d+,\\d+/
+      `);
+
+    const statusBadge = page.getByRole('status').filter({hasText:"EM_ANALISE"})
+
+    await expect (statusBadge).toHaveClass(/bg-amber-100/)
+    await expect (statusBadge).toHaveClass(/text-amber-700/)
+
+    const statusIcon = statusBadge.locator('svg')
+    await expect(statusIcon).toHaveClass(/lucide-clock-icon/)
+
+  })
+
+  test('deve consultar um pedido não encontrado', async ({ page }) => {
+    // Test Data
+    const order = generateOrderCode();
+    
+    // Arrange
+    await page.getByRole('link', { name: 'Consultar Pedido' }).click();
+    await expect(page.getByRole('heading')).toContainText('Consultar Pedido');
+  
+    await page.getByRole('textbox', { name: 'Número do Pedido'}).fill(order);
+    await page.getByRole('button', { name: 'Buscar Pedido' }).click();
+  
+    // Assert
+    await expect(page.locator('#root')).toMatchAriaSnapshot(`
+      - img
+      - heading "Pedido não encontrado" [level=3]
+      - paragraph: Verifique o número do pedido e tente novamente
+      `);
+  
+
+})})
