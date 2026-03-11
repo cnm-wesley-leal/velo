@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
 
-import { generateOrderCode  } from '../support/helpers'
+import { generateOrderCode } from '../support/helpers'
 
-import {OrderLockupPage} from '../support/pages/OrderLockupPage'
+import { OrderLockupPage } from '../support/pages/OrderLockupPage'
 
 /// AAA - Arrange, Act, Assert
 
@@ -22,7 +22,7 @@ test.describe('Consulta de Pedido', () => {
     // Test Data
     const order = {
       number: 'VLO-HUMHRM',
-      status: 'APROVADO',
+      status: 'APROVADO' as const,
       color: 'Glacier Blue',
       wheels: 'aero Wheels',
       customer: {
@@ -35,7 +35,7 @@ test.describe('Consulta de Pedido', () => {
     // Act  
     const orderLockupPage = new OrderLockupPage(page)
     await orderLockupPage.searchOrder(order.number)
-    
+
     // Assert
     await expect(page.getByTestId(`order-result-${order.number}`)).toMatchAriaSnapshot(`
       - img
@@ -65,16 +65,10 @@ test.describe('Consulta de Pedido', () => {
       - heading "Pagamento" [level=4]
       - paragraph: ${order.payment}
       - paragraph: R$ 40.000,00
-
       `);
 
-    const statusBadge = page.getByRole('status').filter({ hasText: order.status })
-
-    await expect(statusBadge).toHaveClass(/bg-green-100/)
-    await expect(statusBadge).toHaveClass(/text-green-700/)
-
-    const statusIcon = statusBadge.locator('svg')
-    await expect(statusIcon).toHaveClass(/lucide-circle-check-big/)
+    // Validação do badge de status encapsulada no Page Object
+    await orderLockupPage.validateStatusBadge(order.status)
 
   })
 
@@ -83,8 +77,8 @@ test.describe('Consulta de Pedido', () => {
     // Test Data
     const order = {
       number: 'VLO-Z9BBZ6',
-      status: 'REPROVADO',
-      color: ' Lunar White',
+      status: 'REPROVADO' as const,
+      color: 'Lunar White',
       wheels: 'aero Wheels',
       customer: {
         name: 'Wesley QA',
@@ -128,13 +122,8 @@ test.describe('Consulta de Pedido', () => {
       - paragraph: R$ 40.000,00
       `);
 
-      const statusBadge = page.getByRole('status').filter({ hasText: order.status })
-
-      await expect(statusBadge).toHaveClass(/bg-red-100/)
-      await expect(statusBadge).toHaveClass(/text-red-700/)
-  
-      const statusIcon = statusBadge.locator('svg')
-      await expect(statusIcon).toHaveClass(/lucide-circle-x/)
+    // Validação do badge de status encapsulada no Page Object
+    await orderLockupPage.validateStatusBadge(order.status)
   })
 
   test('deve consultar um pedido em analise', async ({ page }) => {
@@ -142,11 +131,11 @@ test.describe('Consulta de Pedido', () => {
     // Test Data
     const order = {
       number: 'VLO-JM607A',
-      status: 'EM_ANALISE',
+      status: 'EM_ANALISE' as const,
       color: 'Glacier Blue',
       wheels: 'aero Wheels',
       customer: {
-        name: ' Wesley QA',
+        name: 'Wesley QA',
         email: 'teste@teste.com'
       },
       payment: 'À Vista'
@@ -187,13 +176,8 @@ test.describe('Consulta de Pedido', () => {
       - paragraph: R$ 40.000,00
       `);
 
-      const statusBadge = page.getByRole('status').filter({ hasText: order.status })
-
-      await expect(statusBadge).toHaveClass(/bg-amber-100/)
-      await expect(statusBadge).toHaveClass(/text-amber-700/)
-  
-      const statusIcon = statusBadge.locator('svg')
-      await expect(statusIcon).toHaveClass(/lucide-clock/)
+    // Validação do badge de status encapsulada no Page Object
+    await orderLockupPage.validateStatusBadge(order.status)
   })
 
   test('deve exibir mensagem quando o pedido não é encontrado', async ({ page }) => {
