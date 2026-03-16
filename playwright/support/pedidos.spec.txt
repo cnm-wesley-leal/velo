@@ -34,7 +34,7 @@ test.describe('Consultar Pedido', () => {
     )
   }) */
 
-  test('deve consultar um pedido', async ({ page }) => {
+  test('deve consultar um pedido APROVADO', async ({ page }) => {
 
     // Test Data
     const order = "VLO-HUMHRM"
