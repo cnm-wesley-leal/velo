@@ -1,6 +1,6 @@
 import { test as base } from '@playwright/test'
 
-import { createConfiguratorActions } from './actions/configuratorActions' //
+import { createConfiguratorActions } from './actions/configuratorActions'
 import { createOrderLookupActions } from './actions/orderLookupActions'
 
 type App = {
