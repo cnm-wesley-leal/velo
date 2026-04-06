@@ -2,6 +2,10 @@ import { Page, expect } from '@playwright/test'
 
 export function createCheckoutActions(page: Page) {
   const terms = page.getByTestId('checkout-terms')
+  const paymentCash = page.getByTestId('payment-avista')
+  const paymentFinancing = page.getByTestId('payment-financiamento')
+  const submitButton = page.getByTestId('checkout-submit')
+  const summaryTotalPrice = page.getByTestId('summary-total-price')
 
   const alerts = {
     name: page.getByTestId('error-name'),
@@ -16,6 +20,10 @@ export function createCheckoutActions(page: Page) {
   return {
     elements: {
       terms,
+      paymentCash,
+      paymentFinancing,
+      submitButton,
+      summaryTotalPrice,
       alerts,
     },
 
@@ -24,7 +32,15 @@ export function createCheckoutActions(page: Page) {
     },
 
     async expectSummaryTotal(price: string) {
-      await expect(page.getByTestId('summary-total-price')).toHaveText(price)
+      await expect(summaryTotalPrice).toHaveText(price)
+    },
+
+    async expectCashPaymentAmount(price: string) {
+      await expect(paymentCash).toContainText(price)
+    },
+
+    async selectCashPayment() {
+      await paymentCash.click()
     },
 
     async fillCustomerlData(data: {

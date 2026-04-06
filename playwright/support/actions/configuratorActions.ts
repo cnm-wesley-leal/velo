@@ -2,6 +2,10 @@ import { Page, expect } from '@playwright/test'
 
 export function createConfiguratorActions(page: Page) {
   return {
+    async openHome() {
+      await page.goto('/')
+    },
+
     async open() {
       await page.goto('/configure')
     },
@@ -23,6 +27,11 @@ export function createConfiguratorActions(page: Page) {
     async expectCarImageSrc(src: string) {
       const carImage = page.locator('img[alt^="Velô Sprint"]')
       await expect(carImage).toHaveAttribute('src', src)
+    },
+
+    async proceedToCheckout() {
+      await page.getByTestId('checkout-button').click()
+      await expect(page).toHaveURL(/\/order$/)
     },
   }
 }
