@@ -1,4 +1,5 @@
 import { test, expect } from '../support/fixtures'
+import { deleteOrderByEmail } from '../support/database/orderRepository'
 
 test.describe('Checkout', () => {
 
@@ -119,6 +120,10 @@ test.describe('Checkout', () => {
   })
 
   test.describe('Pagamento e Confirmação', () => {
+    test.beforeEach(async () => {
+      await deleteOrderByEmail('mariana.silva@teste.com')
+    })
+
     test('CT05 - deve concluir pedido aprovado com pagamento à vista', async ({ app, page }) => {
       const checkoutData = {
         customer: {

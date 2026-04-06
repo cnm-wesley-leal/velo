@@ -27,7 +27,7 @@ export async function insertOrder(order: OrderDetails) {
         customer_phone: order.customer.phone,
         customer_cpf: order.customer.document,
         payment_method: normalizeValue(order.payment),
-        total_price: order.total_price,
+        total_price: parseFloat(order.total_price.replace('R$ ', '').replace('.', '').replace(',', '.')),
         status: order.status,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -39,3 +39,7 @@ export async function insertOrder(order: OrderDetails) {
 export async function deleteOrderByNumber(orderNumber: string) {
     await db.deleteFrom('orders').where('order_number', '=', orderNumber).execute()
 }
+
+export async function deleteOrderByEmail(email: string) {
+    await db.deleteFrom('orders').where('customer_email', '=', email).execute()
+}
