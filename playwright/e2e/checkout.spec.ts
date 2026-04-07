@@ -2,17 +2,16 @@ import { test, expect } from '../support/fixtures'
 
 test.describe('Checkout', () => {
 
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/order')
-    await expect(page.getByRole('heading', { name: 'Finalizar Pedido' })).toBeVisible()
-  })
+
 
   test.describe('Validações de campos obrigatórios', () => {
 
 
     let alerts: any
 
-    test.beforeEach(async ({ app }) => {
+    test.beforeEach(async ({ page, app }) => {
+      await page.goto('/order')
+      await expect(page.getByRole('heading', { name: 'Finalizar Pedido' })).toBeVisible()
       alerts = app.checkout.elements.alerts
     })
 
@@ -118,6 +117,36 @@ test.describe('Checkout', () => {
 
       // Assert
       await expect(alerts.terms).toHaveText('Aceite os termos')
+    })
+  })
+
+  test.describe('Pagamento e Confirmação', () => {
+
+    const customer = {
+      name: 'Fernando',
+      lastname: 'Papito',
+      email: 'papito@test.com',
+      document: '52998224725',
+      phone: '(11) 99999-9999'
+    }
+
+    test('deve realizar pedido com pagamento à vista', async ({ page, app }) => {
+      // Arrange
+      await page.goto('/')
+      await page.getByRole('link', { name: 'Configure Agora' }).click()
+      await app.configurator.checkout()
+
+      await app.checkout.expectLoaded()
+      await app.checkout.fillCustomerlData(customer)
+      await app.checkout.selectStore('Velô Paulista')
+
+      // Act
+      await app.checkout.selectPaymentMethod('À Vista')
+      await app.checkout.acceptTerms()
+      await app.checkout.submit()
+
+      // Assert
+      await app.checkout.expectSuccess()
     })
   })
 })

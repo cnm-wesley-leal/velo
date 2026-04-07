@@ -46,12 +46,20 @@ export function createCheckoutActions(page: Page) {
       await page.getByRole('option', { name: new RegExp(storeName, 'i') }).click()
     },
 
+    async selectPaymentMethod(method: 'À Vista' | 'Financiamento') {
+      await page.getByRole('button', { name: method }).click()
+    },
+
     async acceptTerms() {
       await terms.check()
     },
 
     async submit() {
       await page.getByRole('button', { name: 'Confirmar Pedido' }).click()
+    },
+
+    async expectSuccess() {
+      await expect(page.getByText('Pedido Aprovado!')).toBeVisible()
     },
   }
 }
