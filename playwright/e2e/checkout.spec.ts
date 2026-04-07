@@ -1,4 +1,5 @@
 import { test, expect } from '../support/fixtures'
+import { deleteOrderByNumber } from '../support/database/orderRepository'
 
 test.describe('Checkout', () => {
 
@@ -146,7 +147,8 @@ test.describe('Checkout', () => {
       await app.checkout.submit()
 
       // Assert
-      await app.checkout.expectSuccess()
+      const orderId = await app.checkout.expectSuccess()
+      await deleteOrderByNumber(orderId)
     })
   })
 })

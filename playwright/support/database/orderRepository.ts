@@ -1,41 +1,34 @@
-import { db } from './database'
-import { OrderTable } from './schema'
+import { createClient } from '@supabase/supabase-js'
 
-import { OrderDetails } from '../actions/orderLookupActions'
-
-import crypto from 'crypto'
-
-export function normalizeValue(value: string) {
-    if (!value) return '';
-
-    return value
-        .normalize('NFD') // separa acentos
-        .replace(/[\u0300-\u036f]/g, '') // remove acentos
-        .replace(/\s+/g, '') // remove espaços
-        .toLowerCase(); // lowercase
-}
-
-export async function insertOrder(order: OrderDetails) {
-
-    const data: OrderTable = {
-        id: crypto.randomUUID(),
-        order_number: order.number,
-        color: order.color.toLowerCase().replace(' ', '-'),
-        wheel_type: order.wheels.replace(' Wheels', '').toLowerCase(),
-        customer_name: order.customer.name,
-        customer_email: order.customer.email,
-        customer_phone: order.customer.phone,
-        customer_cpf: order.customer.document,
-        payment_method: normalizeValue(order.payment),
-        total_price: order.total_price,
-        status: order.status,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        optionals: [],
-    }
-    await db.insertInto('orders').values(data).execute()
-}
+const supabase = createClient(
+    process.env.VITE_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
+)
 
 export async function deleteOrderByNumber(orderNumber: string) {
-    await db.deleteFrom('orders').where('order_number', '=', orderNumber).execute()
+    const cleanedOrderNumber = orderNumber.trim()
+
+    // 1. Tenta buscar para ver se o registro é visível
+    const { data } = await supabase
+        .from('orders')
+        .select('id, order_number')
+        .eq('order_number', cleanedOrderNumber)
+        .maybeSingle()
+
+    if (!data) {
+        console.log(`[Cleanup] Pedido ${cleanedOrderNumber} não encontrado para exclusão.`)
+        return
+    }
+
+    // 2. Tenta deletar
+    const { error, count } = await supabase
+        .from('orders')
+        .delete({ count: 'exact' })
+        .eq('order_number', cleanedOrderNumber)
+
+    if (error) {
+        console.error(`[Cleanup] Erro ao deletar ${cleanedOrderNumber}:`, error)
+    } else {
+        console.log(`[Cleanup] Pedido ${cleanedOrderNumber} deletado. Linhas afetadas: ${count}`)
+    }
 }

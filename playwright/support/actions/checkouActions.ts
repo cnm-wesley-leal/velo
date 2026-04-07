@@ -59,7 +59,9 @@ export function createCheckoutActions(page: Page) {
     },
 
     async expectSuccess() {
-      await expect(page.getByText('Pedido Aprovado!')).toBeVisible()
+      const element = page.getByTestId('order-id')
+      await expect(element).toBeVisible()
+      return await element.innerText()
     },
   }
 }
