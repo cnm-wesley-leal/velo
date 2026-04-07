@@ -1,41 +1,47 @@
-import { db } from './database'
-import { OrderTable } from './schema'
+import { createClient } from '@supabase/supabase-js'
 
-import { OrderDetails } from '../actions/orderLookupActions'
+function getSupabase() {
+  const url = process.env.VITE_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-import crypto from 'crypto'
+  if (!url || !key) {
+    throw new Error(
+      `Variáveis de ambiente faltando:\n` +
+      `  VITE_SUPABASE_URL: ${url ? '✓' : '✗ AUSENTE'}\n` +
+      `  SUPABASE_SERVICE_ROLE_KEY: ${key ? '✓' : '✗ AUSENTE'}`
+    )
+  }
 
-export function normalizeValue(value: string) {
-    if (!value) return '';
-
-    return value
-        .normalize('NFD') // separa acentos
-        .replace(/[\u0300-\u036f]/g, '') // remove acentos
-        .replace(/\s+/g, '') // remove espaços
-        .toLowerCase(); // lowercase
+  return createClient(url, key)
 }
 
-export async function insertOrder(order: OrderDetails) {
+export async function deleteOrderByNumber(orderNumber: string): Promise<void> {
+  const supabase = getSupabase()
+  const cleanedOrderNumber = orderNumber.trim()
 
-    const data: OrderTable = {
-        id: crypto.randomUUID(),
-        order_number: order.number,
-        color: order.color.toLowerCase().replace(' ', '-'),
-        wheel_type: order.wheels.replace(' Wheels', '').toLowerCase(),
-        customer_name: order.customer.name,
-        customer_email: order.customer.email,
-        customer_phone: order.customer.phone,
-        customer_cpf: order.customer.document,
-        payment_method: normalizeValue(order.payment),
-        total_price: order.total_price,
-        status: order.status,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        optionals: [],
-    }
-    await db.insertInto('orders').values(data).execute()
+  const { error } = await supabase
+    .from('orders')
+    .delete()
+    .eq('order_number', cleanedOrderNumber)
+
+  if (error) {
+    throw new Error(`Erro ao deletar pedido ${cleanedOrderNumber}: ${error.message}`)
+  }
+
+  console.log(`[Cleanup] Pedido ${cleanedOrderNumber} deletado.`)
 }
 
-export async function deleteOrderByNumber(orderNumber: string) {
-    await db.deleteFrom('orders').where('order_number', '=', orderNumber).execute()
+export async function deleteOrderByEmail(email: string): Promise<void> {
+  const supabase = getSupabase()
+
+  const { error } = await supabase
+    .from('orders')
+    .delete()
+    .eq('customer_email', email)
+
+  if (error) {
+    throw new Error(`Erro ao deletar pedidos do email ${email}: ${error.message}`)
+  }
+
+  console.log(`[Cleanup] Pedidos com email ${email} deletados.`)
 }

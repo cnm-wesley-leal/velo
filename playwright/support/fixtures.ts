@@ -1,6 +1,6 @@
 import { test as base, expect } from '@playwright/test'
 import { createConfiguratorActions } from './actions/configuratorActions'
-import { createCheckoutActions } from './actions/checkouActions'
+import { createCheckoutActions } from './actions/checkoutActions'
 import { createOrderLookupActions } from './actions/orderLookupActions'
 
 type AppActions = {
