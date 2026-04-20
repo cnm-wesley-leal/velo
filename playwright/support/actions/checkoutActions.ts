@@ -27,6 +27,10 @@ export function createCheckoutActions(page: Page) {
       await expect(page.getByTestId('summary-total-price')).toHaveText(price)
     },
 
+    async expectAlert(field: keyof typeof alerts, message: string) {
+      await expect(alerts[field]).toHaveText(message)
+    },
+
     async fillCustomerlData(data: {
       name: string
       lastname: string
