@@ -10,10 +10,9 @@ on:
 
 env:
   NODE_VERSION: '24'
-  VERCEL_TOKEN: ${{secrets.VERCEL_TOKEN}}
-  VERCEL_PROJECT_ID:  ${{secrets.VERCEL_PROJECT_ID}}
-  VERCEL_ORG_ID: ${{secrets.VERCEL_ORG_ID}}
-  VERCEL_SCOPE: ${{secrets.VERCEL_SCOPE}}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
 
 jobs:
   unit-tests:
@@ -69,7 +68,7 @@ jobs:
 
       # Obter configurações as configurações do Vercel
       - name: Pull Vercel Config
-        run: yarn vercel pull --yes --environment=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE
+        run: yarn vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
 
       # Executa os testes unitários com o Vitest
       - name: Build Vercel
@@ -77,4 +76,4 @@ jobs:
 
       # Executa o deploy no Vercel
       - name: Deploy Vercel
-        run: yarn vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE
+        run: yarn vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN
