@@ -5,11 +5,9 @@
       "destination": "/index.html"
     }
   ],
-  "git": [
-    {
-      "developmentEnabled": {
-        "main": false
-      }
+  "git": {
+    "deploymentEnabled": {
+      "main": false
     }
-  ]
+  }
 }
