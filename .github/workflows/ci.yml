@@ -65,11 +65,11 @@ jobs:
 
       # Instala as dependências do projeto com base no yarn.lock
       - name: Install Dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile
 
       # Obter configurações as configurações do Vercel
       - name: Pull Vercel Config
-        run: vercel pull --yes --environment=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE
+        run: yarn vercel pull --yes --environment=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE
 
       # Executa os testes unitários com o Vitest
       - name: Build Vercel
