@@ -150,4 +150,16 @@ jobs:
           npx vercel@latest promote ${{ needs.build-and-deploy.outputs.deployment-url }} \
           --token=$VERCEL_TOKEN \
           --scope=$VERCEL_SCOPE \
+          --yes]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses:  actions/checkout@v6.0.2
+
+      - name: Vercel promote
+        run: |
+          npx vercel@latest promote ${{ needs.build-and-deploy.outputs.deployment-url }} \
+          --token=$VERCEL_TOKEN \
+          --scope=$VERCEL_SCOPE \
           --yes
