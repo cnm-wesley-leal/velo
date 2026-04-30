@@ -114,7 +114,7 @@ jobs:
       - name: Run E2E Tests
         run: yarn playwright test
         env:
-          BASE_URL: ${{ needs.build-and-deploy.outputs.deployment-url }}
+          BASE_URL: ${{ needs.build-and-deploy.outputs.deployment_url }}
 
       # Relatório HTML no Vercel
       - name: Upload Playwright HTML Report
