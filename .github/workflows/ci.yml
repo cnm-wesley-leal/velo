@@ -83,7 +83,7 @@ jobs:
         id: deploy
         run: |
           URL=$(yarn --silent vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN)
-          echo "deployment-url=$URL" >> $GITHUB_OUTPUT
+          echo "deployment_url=$URL" >> $GITHUB_OUTPUT
 
   e2e-tests:
     name: E2E Tests
