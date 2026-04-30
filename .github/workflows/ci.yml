@@ -87,12 +87,12 @@ jobs:
           RAW=$(npx vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE)
           echo "$RAW"
           echo "=== FIM DO OUTPUT ==="
-          URL=$(echo "$RAW" | grep -E 'https://[^ ]+' | tail -1)
+          URL=$(echo "$RAW" | grep -oE 'https://[a-zA-Z0-9-]+-[a-zA-Z0-9]+-[a-zA-Z0-9-]+\.vercel\.app' | tail -1)
           echo "URL extraída: $URL"
           echo "deployment-url=$URL" >> $GITHUB_OUTPUT
 
       - name: Debug deployment URL
-        run: echo "BASE_URL=${{ needs.build-and-deploy.outputs.deployment-url }}"
+        run: echo "BASE_URL=${{ steps.deploy.outputs.deployment-url }}"
 
   e2e-tests:
     name: E2E Tests
@@ -122,6 +122,14 @@ jobs:
       - name: Install Playwright Browsers
         run: yarn playwright install --with-deps chromium
 
+      - name: Debug BASE_URL
+        run: |
+          echo "deployment-url recebida: ${{ needs.build-and-deploy.outputs.deployment-url }}"
+          if [ -z "${{ needs.build-and-deploy.outputs.deployment-url }}" ]; then
+            echo "ERRO: deployment-url está VAZIA"
+            exit 1
+          fi
+
       # Executa os testes e2e com o Playwright
       - name: Run E2E Tests
         run: yarn playwright test
@@ -139,18 +147,6 @@ jobs:
   promote:
     name: Promote to Production
     needs: [build-and-deploy, e2e-tests]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses:  actions/checkout@v6.0.2
-
-      - name: Vercel promote
-        run: |
-          npx vercel@latest promote ${{ needs.build-and-deploy.outputs.deployment-url }} \
-          --token=$VERCEL_TOKEN \
-          --scope=$VERCEL_SCOPE \
-          --yes]
     runs-on: ubuntu-latest
 
     steps:
