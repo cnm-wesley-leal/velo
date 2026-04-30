@@ -118,7 +118,7 @@ jobs:
       - name: Run E2E Tests
         run: yarn playwright test
         env:
-          BASE_URL: ${{ needs.build-and-deploy.outputs.deployment-url }}
+          BASE_URL: ${{ needs.build-and-deploy.outputs.deployment_url }}
 
       # Relatório HTML no Vercel
       - name: Upload Playwright HTML Report
@@ -134,9 +134,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses:  actions/checkout@v6.0.2
+
       - name: Vercel promote
         run: |
-          npx vercel@latest promote ${{ needs.build-and-deploy.outputs.deployment-url }} \
+          npx vercel@latest promote ${{ needs.build-and-deploy.outputs.deployment_url }} \
           --token=$VERCEL_TOKEN \
           --scope=$VERCEL_SCOPE \
           --yes
