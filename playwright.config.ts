@@ -95,4 +95,4 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 120_000,
   },
-});
+})
