@@ -87,6 +87,9 @@ jobs:
           echo "deployment-url=$URL" >> $GITHUB_OUTPUT
           echo "Preview URL: $URL"
 
+      - name: Debug deployment URL
+        run: echo "BASE_URL=${{ needs.build-and-deploy.outputs.deployment-url }}"
+
   e2e-tests:
     name: E2E Tests
     needs: [build-and-deploy]
