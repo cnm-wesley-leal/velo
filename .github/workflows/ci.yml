@@ -15,6 +15,7 @@ env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  VERCEL_SCOPE: wes-leals-projects
 
 jobs:
   unit-tests:
@@ -72,17 +73,17 @@ jobs:
 
       # Obter configurações as configurações do Vercel
       - name: Pull Vercel Config
-        run: yarn vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+        run: yarn vercel pull --yes --environment=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE
 
       # Executa o build no Vercel
       - name: Build Vercel
-        run: yarn vercel build --token=$VERCEL_TOKEN
+        run: yarn vercel build --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE
 
       # Executa o deploy no Vercel
       - name: Deploy Vercel
         id: deploy
         run: |
-          URL=$(yarn --silent vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN)
+          URL=$(yarn --silent vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE)
           echo "deployment_url=$URL" >> $GITHUB_OUTPUT
 
   e2e-tests:
@@ -138,5 +139,5 @@ jobs:
         run: |
           npx vercel@latest promote ${{needs.build-and-deploy.outputs.deployment_url}} \
           --token=$VERCEL_TOKEN \
+          --scope=$VERCEL_SCOPE \
           --yes
-        
