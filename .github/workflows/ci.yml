@@ -83,8 +83,9 @@ jobs:
       - name: Deploy Vercel
         id: deploy
         run: |
-          URL=$(yarn --silent vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN)
+          URL=$(npx vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE 2>/dev/null | grep -E '^https://' | tail -1)
           echo "deployment-url=$URL" >> $GITHUB_OUTPUT
+          echo "Preview URL: $URL"
 
   e2e-tests:
     name: E2E Tests
