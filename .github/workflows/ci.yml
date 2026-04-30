@@ -49,7 +49,7 @@ jobs:
     needs: [unit-tests]
     runs-on: ubuntu-latest
     outputs:
-      deployment_url: ${{ steps.deploy.outputs.deployment-url }}
+      deployment_url: ${{ steps.deploy.outputs.deployment_url }}
 
     steps:
       # Realiza o checkout do repositório
@@ -117,7 +117,7 @@ jobs:
       - name: Run E2E Tests
         run: yarn playwright test
         env:
-          BASE_URL: ${{ needs.build-and-deploy.outputs.deployment-url }}
+          BASE_URL: ${{ needs.build-and-deploy.outputs.deployment_url }}
 
       # Relatório HTML no Vercel
       - name: Upload Playwright HTML Report
@@ -136,7 +136,7 @@ jobs:
     steps:
       - name: Vercel Promote
         run: |
-          npx vercel@latest promote ${{needs.build-and-deploy.outputs.deployment-url}} \
-          --token=$VERCEL_TOKEN
+          npx vercel@latest promote ${{needs.build-and-deploy.outputs.deployment_url}} \
+          --token=$VERCEL_TOKEN \
           --yes
         
