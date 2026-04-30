@@ -83,9 +83,13 @@ jobs:
       - name: Deploy Vercel
         id: deploy
         run: |
-          URL=$(npx vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE 2>/dev/null | grep -E '^https://' | tail -1)
+          echo "=== RAW OUTPUT ==="
+          RAW=$(npx vercel deploy --prebuilt --target=preview --token=$VERCEL_TOKEN --scope=$VERCEL_SCOPE)
+          echo "$RAW"
+          echo "=== FIM DO OUTPUT ==="
+          URL=$(echo "$RAW" | grep -E 'https://[^ ]+' | tail -1)
+          echo "URL extraída: $URL"
           echo "deployment-url=$URL" >> $GITHUB_OUTPUT
-          echo "Preview URL: $URL"
 
       - name: Debug deployment URL
         run: echo "BASE_URL=${{ needs.build-and-deploy.outputs.deployment-url }}"
@@ -126,7 +130,7 @@ jobs:
 
       # Relatório HTML no Vercel
       - name: Upload Playwright HTML Report
-        if: ${{cancelled()}}
+        if: ${{cancelled() || failure()}}
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
