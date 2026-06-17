@@ -23,6 +23,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -46,6 +47,7 @@ jobs:
     name: Build and Deploy Preview
     needs: [unit-tests]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     outputs:
       deployment-url: ${{ steps.deploy.outputs.deployment-url }}
 
@@ -89,6 +91,7 @@ jobs:
     name: E2E Tests
     needs: [build-preview]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -132,6 +135,7 @@ jobs:
     name: Build and Deploy Production
     needs: [e2e-tests]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
