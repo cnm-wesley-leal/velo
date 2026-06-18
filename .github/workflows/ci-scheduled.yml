@@ -1,0 +1,122 @@
+# Workflow de Testes Agendados — Velô Sprint
+#
+# Gatilho: schedule (cron) — executa automaticamente de segunda a sexta às 03h BRT (06h UTC)
+# Propósito: garantir que os testes continuem passando mesmo sem push recente,
+#            detectando regressões causadas por dependências externas (Supabase, etc.)
+#
+# Diferença em relação ao ci.yml principal:
+#   - NÃO realiza build nem deploy na Vercel (economiza custos)
+#   - Foca apenas na qualidade do código via testes unitários e E2E
+#   - Roda contra o ambiente de preview já implantado
+
+name: Scheduled Tests
+
+on:
+  # Execução agendada: Segunda a Sexta, 06h UTC (03h BRT)
+  # Sintaxe cron: minuto hora dia-do-mês mês dia-da-semana
+  schedule:
+    - cron: '0 6 * * 1-5'
+
+  # Permite disparar manualmente para testar o workflow agendado a qualquer momento
+  workflow_dispatch:
+    inputs:
+      motivo:
+        description: 'Motivo da execução manual (opcional)'
+        required: false
+        default: 'Teste manual do workflow agendado'
+
+env:
+  NODE_VERSION: '24'
+  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+  VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Scheduled)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run Unit Tests
+        run: yarn test --reporter=default --reporter=json --outputFile=vitest-report/results.json
+
+      # Relatório de testes unitários armazenado como artefato da pipeline
+      - name: Upload Vitest Report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-report-scheduled-${{ github.run_number }}
+          path: vitest-report/
+          retention-days: 30
+
+  e2e-tests:
+    name: E2E Tests (Scheduled)
+    needs: [unit-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: yarn playwright install chromium
+
+      - name: Run E2E Tests
+        run: yarn playwright test
+        env:
+          BASE_URL: ${{ secrets.PREVIEW_URL }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL_PREVIEW }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY_PREVIEW }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID_PREVIEW }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PREVIEW }}
+
+      # Relatório HTML do Playwright armazenado como artefato da pipeline (sempre)
+      - name: Upload Playwright HTML Report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-scheduled-${{ github.run_number }}
+          path: playwright-report
+          retention-days: 30
+
+      - name: Upload results to TestDino
+        if: ${{ !cancelled() }}
+        run: npx tdpw upload ./playwright-report --token=${{ secrets.TT_TOKEN }}

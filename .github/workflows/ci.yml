@@ -1,5 +1,14 @@
-# Workflow de Integração Contínua responsável por executar os testes unitários do projeto.
-# Estrutura preparada para expansão futura com novos jobs (lint, build, deploy, etc.).
+# Workflow de Integração Contínua — Velô Sprint
+#
+# Gatilhos configurados:
+#   - push: Dispara automaticamente a cada push na branch main
+#   - workflow_dispatch: Permite execução manual pelo painel do GitHub Actions
+#
+# Jobs (executados em sequência):
+#   1. unit-tests     → roda testes unitários (Vitest) e publica relatório
+#   2. build-preview  → faz build e deploy de preview na Vercel
+#   3. e2e-tests      → roda testes E2E (Playwright) contra a URL de preview
+#   4. build-production → faz deploy de produção na Vercel
 
 name: Continuous Integration
 
@@ -7,6 +16,14 @@ on:
   push:
     branches:
       - main
+
+  # Execução manual via painel do GitHub Actions (Actions → Run workflow)
+  workflow_dispatch:
+    inputs:
+      motivo:
+        description: 'Motivo da execução manual (opcional)'
+        required: false
+        default: 'Execução manual solicitada'
 
 env:
   NODE_VERSION: '24'
@@ -27,10 +44,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v6.4.0
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
@@ -42,7 +59,17 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Run Unit Tests
-        run: yarn test
+        run: yarn test --reporter=default --reporter=json --outputFile=vitest-report/results.json
+
+      # Publica o relatório de testes unitários como artefato da pipeline
+      # Disponível em: Actions → [execução] → Artifacts → vitest-report
+      - name: Upload Vitest Report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-report-${{ github.run_number }}
+          path: vitest-report/
+          retention-days: 30
 
   build-preview:
     name: Build and Deploy Preview
@@ -54,10 +81,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v6.4.0
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
@@ -97,10 +124,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v6.4.0
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
@@ -131,12 +158,15 @@ jobs:
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID_PREVIEW }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_PREVIEW }}
 
+      # Publica o relatório HTML do Playwright SEMPRE (sucesso ou falha)
+      # Disponível em: Actions → [execução] → Artifacts → playwright-report
       - name: Upload Playwright HTML Report
-        if: ${{ cancelled() || failure() }}
-        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ github.run_number }}
           path: playwright-report
+          retention-days: 30
 
       - name: Upload results to TestDino
         if: ${{ !cancelled() }}
@@ -150,10 +180,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v6.4.0
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
